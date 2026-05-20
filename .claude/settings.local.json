@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/anubha/Desktop/jsp-/src/app /Users/anubha/Desktop/jsp-/src/components /Users/anubha/Desktop/jsp-/src/lib /Users/anubha/Desktop/jsp-/pages/api /Users/anubha/Desktop/jsp-/supabase)"
+    ],
+    "additionalDirectories": [
+      "/Users/anubha/Desktop/jsp-/src"
+    ]
+  }
+}
