@@ -27,6 +27,7 @@ export type RemotePreference = 'any' | 'remote' | 'hybrid' | 'onsite'
 export type OutreachStatus = 'draft' | 'sent'
 
 export interface CandidateForm {
+  yourName: string
   background: string
   targetRole: string
   achievements: string

@@ -44,6 +44,7 @@ function SelectWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function InputForm({ onSubmit, loading }: InputFormProps) {
+  const [yourName, setYourName]               = useState('')
   const [background, setBackground]           = useState('')
   const [targetRole, setTargetRole]           = useState('')
   const [achievements, setAchievements]       = useState('')
@@ -53,12 +54,13 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
   const [remotePreference, setRemotePreference] = useState<RemotePreference>('any')
   const [preferredCompanies, setPreferredCompanies] = useState('')
 
-  const isReady = background.trim() && targetRole.trim()
+  const isReady = yourName.trim() && background.trim() && targetRole.trim()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!isReady) return
     onSubmit({
+      yourName: yourName.trim(),
       background: background.trim(),
       targetRole: targetRole.trim(),
       achievements: achievements.trim(),
@@ -80,6 +82,22 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
           <span className="ml-2.5 text-[11px] font-normal text-[#555] normal-case tracking-normal">
             — used to personalize your outreach drafts
           </span>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="yourName" className={labelCls}>
+            Your Name <Required />
+          </label>
+          <input
+            id="yourName"
+            type="text"
+            value={yourName}
+            onChange={(e) => setYourName(e.target.value)}
+            placeholder="e.g. Anubha Kanwar"
+            required
+            disabled={loading}
+            className={inputCls}
+          />
         </div>
 
         <div className="mb-4">
@@ -147,12 +165,29 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
           <input
             id="industry"
             type="text"
+            list="industry-suggestions"
             value={industry}
             onChange={(e) => setIndustry(e.target.value)}
-            placeholder="e.g. fintech, B2B SaaS, developer tools, AI/ML, e-commerce"
+            placeholder="Select or type an industry…"
             disabled={loading}
             className={inputCls}
           />
+          <datalist id="industry-suggestions">
+            {[
+              'AI / ML', 'AgriTech', 'API / Platform', 'Automotive / Mobility',
+              'B2B SaaS', 'BioTech', 'Blockchain / Web3', 'Clean Tech',
+              'Cloud Infrastructure', 'Consumer / D2C', 'Cybersecurity',
+              'Data & Analytics', 'Deep Tech', 'Developer Tools',
+              'E-commerce', 'EdTech', 'Enterprise Software',
+              'Fintech / Payments', 'Food Tech', 'Gaming',
+              'HealthTech / MedTech', 'HR Tech', 'InsurTech', 'IoT',
+              'LegalTech', 'Logistics / Supply Chain', 'Manufacturing',
+              'Marketplace', 'Media / Content', 'No-code / Low-code',
+              'Open Source', 'PropTech', 'Quick Commerce', 'Retail Tech',
+              'Social / Community', 'Space Tech', 'Telecom',
+              'Travel / Hospitality', 'WealthTech',
+            ].map((o) => <option key={o} value={o} />)}
+          </datalist>
         </div>
 
         <div className="mb-4">
@@ -164,11 +199,32 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Bangalore, Mumbai, Delhi NCR, Remote India"
+            placeholder="e.g. Bangalore, Mumbai, Delhi NCR"
             disabled={loading}
             className={inputCls}
           />
-          <p className="text-[11px] text-[#555] mt-1.5">Defaults to India. Clear to search globally.</p>
+          <div className="flex gap-1.5 flex-wrap mt-2">
+            {['Bangalore', 'Mumbai', 'Delhi NCR', 'Hyderabad', 'Chennai', 'Remote'].map((city) => (
+              <button
+                key={city}
+                type="button"
+                disabled={loading}
+                onClick={() => setLocation(location === city ? '' : city)}
+                className={`text-[11px] px-2.5 py-1 rounded border cursor-pointer font-[inherit] transition-colors ${
+                  location === city
+                    ? city === 'Remote'
+                      ? 'bg-blue-900 text-blue-300 border-blue-700'
+                      : 'bg-green-900 text-green-400 border-green-800'
+                    : 'bg-[#0f0f0f] text-[#666] border-[#2a2a2a] hover:text-[#aaa] hover:border-[#3a3a3a]'
+                }`}
+              >
+                {city === 'Remote' ? '🌐 Remote' : city}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-[#555] mt-1.5">
+            {location === 'Remote' ? 'Showing remote-first companies only.' : 'Defaults to India. Clear to search globally.'}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3.5 mb-4">

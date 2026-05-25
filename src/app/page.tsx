@@ -15,7 +15,7 @@ const STEP_LABELS: Record<number, string> = {
 export default function HomePage() {
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<CandidateForm>({
-    background: '', targetRole: '', achievements: '',
+    yourName: '', background: '', targetRole: '', achievements: '',
     industry: '', location: 'India', companyStage: 'any',
     remotePreference: 'any', preferredCompanies: '',
   })
@@ -65,12 +65,18 @@ export default function HomePage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              yourName: formData.yourName,
               background: formData.background,
               targetRole: formData.targetRole,
               achievements: formData.achievements,
+              industry: formData.industry,
+              location: formData.location,
+              companyStage: formData.companyStage,
+              remotePreference: formData.remotePreference,
               company: recruiter.company,
               recruiterName: recruiter.name,
               recruiterRole: recruiter.role,
+              recruiterLocation: recruiter.location,
             }),
           })
           const outreach = await res.json() as OutreachDraft
