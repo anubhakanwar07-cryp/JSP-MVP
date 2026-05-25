@@ -1,108 +1,178 @@
 # JSP — Job Search Platform
 
-A candidate-side recruiter outreach workflow tool. Enter a company and your background, find a matching recruiter, generate a personalized outreach email, and save it as a lead.
+Candidate-side recruiter outreach tool. Enter your background and target role, discover recruiter contacts, generate personalized outreach emails, save leads, and schedule follow-ups.
 
-## What it does
+---
 
-1. **Find Recruiter** — Enter a company name, target role, and your background. The app finds (or generates) a relevant recruiter contact.
-2. **Review Match** — See the recruiter's name, title, email, and a confidence score.
-3. **Generate Outreach** — Get a personalized draft email based on your background and the recruiter's info.
-4. **Save Lead** — Save to your Supabase database with status `draft` or `sent`.
+## What this does
+
+1. **Enter context** — your name, background, achievements, target role, tone, and optional job description
+2. **Discover recruiters** — searches Hunter.io by domain; falls back to curated demo data
+3. **Add manually** — add any recruiter by name/email if you already have their contact
+4. **Generate outreach** — personalized email per recruiter (OpenAI if configured, template fallback otherwise)
+5. **Copy / open in Gmail** — one click to send
+6. **Save lead** — stores to Supabase with status `draft` or `sent`
+7. **Follow-up reminder** — when marked as sent, calculates follow-up date (Day +3) automatically
+8. **Generate follow-up draft** — one click to generate a follow-up email per recruiter
+
+---
+
+## Current workflow
+
+```
+InputForm → /api/find-recruiter → RecruiterList
+         → select recruiters
+         → /api/generate-outreach (per recruiter)
+         → OutreachQueue
+         → copy / open Gmail / mark sent
+         → /api/save-lead → Supabase
+         → follow-up date shown
+         → /api/generate-followup (on demand)
+```
 
 ---
 
 ## Setup
 
-### 1. Clone / navigate to the project
-
-```bash
-cd /Users/anubha/Desktop/jsp-
-```
-
-### 2. Install dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Set up Supabase
-
-1. Go to [supabase.com](https://supabase.com) and create a free account.
-2. Click **New Project** and fill in your project details.
-3. Once the project is ready, go to **Settings → API**.
-4. Copy your **Project URL** and **anon/public** API key.
-
-### 4. Configure environment variables
+### 2. Configure environment variables
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-Open `.env.local` and fill in your values:
+Fill in `.env.local`:
 
-```
+```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-OPENAI_API_KEY=optional-for-future-use
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+HUNTER_API_KEY=your-hunter-api-key          # optional — enables real recruiter discovery
+OPENAI_API_KEY=your-openai-api-key          # optional — enables AI email generation
+NEXT_PUBLIC_SENDER_EMAIL=you@gmail.com      # optional — pre-fills Gmail authuser
 ```
 
-### 5. Run the database schema
+### 3. Run Supabase schema
 
-1. In your Supabase project, go to the **SQL Editor** (left sidebar).
-2. Click **New query**.
-3. Paste the contents of `supabase/schema.sql`.
-4. Click **Run**.
+In your Supabase project → SQL Editor → New query, paste `supabase/schema.sql` and run it.
 
-This creates the `outreach_leads` table.
+If you have an existing `outreach_leads` table, run only the `ALTER TABLE` migration lines at the bottom of the schema file.
 
-### 6. Start the development server
+### 4. Start dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Project structure
+## Environment variables
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key |
+| `HUNTER_API_KEY` | No | Real recruiter email discovery via Hunter.io |
+| `OPENAI_API_KEY` | No | AI-powered email generation (gpt-4o-mini) |
+| `NEXT_PUBLIC_SENDER_EMAIL` | No | Pre-fills Gmail authuser in "Open in Gmail" link |
+
+Without `HUNTER_API_KEY`: returns curated demo recruiter data (clearly labelled "Demo").  
+Without `OPENAI_API_KEY`: uses template-based email generation.
+
+---
+
+## API routes
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/find-recruiter` | POST | Discover recruiters via Hunter.io or demo fallback |
+| `/api/generate-outreach` | POST | Generate personalized outreach email |
+| `/api/generate-followup` | POST | Generate follow-up email draft |
+| `/api/save-lead` | POST | Save outreach to Supabase, compute follow-up date |
+
+---
+
+## Folder structure
 
 ```
 src/
   app/
-    layout.js        — Root layout with font and global styles
-    page.js          — Main page orchestrating the 3-step workflow
-    globals.css      — Tailwind directives + base styles
+    api/
+      find-recruiter/route.ts     — recruiter discovery (Hunter + fallback)
+      generate-outreach/route.ts  — outreach email generation
+      generate-followup/route.ts  — follow-up email generation
+      save-lead/route.ts          — save lead to Supabase with follow-up logic
+    globals.css
+    layout.tsx
+    page.tsx                      — 3-step workflow orchestration
   components/
-    InputForm.js     — Step 1: company, role, background inputs
-    RecruiterCard.js — Step 2: recruiter details + confidence score
-    OutreachDraft.js — Step 3: email draft with copy/save actions
+    InputForm.tsx                 — Step 1: candidate context + job details + tone
+    RecruiterList.tsx             — Step 2: recruiter cards + manual entry
+    OutreachQueue.tsx             — Step 3: email drafts + follow-up generation
   lib/
-    supabaseClient.js — Initialized Supabase client
-
-pages/
-  api/
-    find-recruiter.js   — POST: returns mock recruiter for a company
-    generate-outreach.js — POST: builds personalized email from inputs
-    save-lead.js        — POST: inserts lead record into Supabase
+    supabase/client.ts            — Supabase client
+  types/
+    index.ts                      — all TypeScript types
 
 supabase/
-  schema.sql           — Table definition for outreach_leads
+  schema.sql                      — table definition + migration comments
 ```
 
 ---
 
-## Tech stack
+## Supabase schema
 
-- **Next.js 14** (App Router for pages, Pages Router for API routes)
-- **Supabase** — Postgres database via hosted service
-- **Tailwind CSS** — Utility-first styling
-- **React 18** — UI components
+Table: `outreach_leads`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `company_name` | text | Target company |
+| `role_targeted` | text | Target role |
+| `candidate_name` | text | Sender name |
+| `recruiter_name` | text | |
+| `recruiter_role` | text | |
+| `recruiter_email` | text | |
+| `recruiter_linkedin` | text | |
+| `outreach_message` | text | Full subject + body |
+| `outreach_status` | text | `draft`, `sent`, `followup_due`, `followed_up`, `replied`, `cold`, `closed` |
+| `email_status` | text | `verified`, `probable`, `unknown`, `fallback` |
+| `sent_at` | timestamptz | Set when status = sent |
+| `followup_date` | timestamptz | sent_at + 3 days |
+| `followup_stage` | text | `first_followup`, `second_followup`, `going_cold` |
+| `last_followup_at` | timestamptz | Updated on follow-up |
+| `source` | text | `hunter`, `linkedin_scraper`, `fallback`, `manual` |
+| `confidence_score` | integer | 0–100 |
+| `created_at` | timestamptz | Auto |
 
 ---
 
-## Notes
+## How to test the full flow
 
-- All recruiter data in this MVP is **mock/simulated** — no real recruiter database is queried.
-- The `OPENAI_API_KEY` env var is included for a future enhancement where the outreach email is generated by GPT-4 instead of string interpolation.
-- No authentication is included in this MVP.
+1. Run `npm run dev`
+2. Open [http://localhost:3000](http://localhost:3000)
+3. Fill in your name, background, and target role → click **Discover Recruiter Leads**
+4. Review recruiter list — check source badge (Hunter / Demo) and email status badges
+5. Try **Add Recruiter Manually** — enter a name, email, company → appears in list
+6. Select one or more recruiters → click **Generate Outreach**
+7. Review subject line and email body per recruiter
+8. Click **Copy** or **Open in Gmail**
+9. Click **Mark as Sent** — card shows follow-up date (+3 days)
+10. Click **+ Follow-up Draft** — generates a ready-to-send follow-up email
+
+---
+
+## Current limitations
+
+- No auth — all data is public within the Supabase project
+- No lead dashboard — no UI to view saved leads (query Supabase directly)
+- Hunter discovery limited to top 5 companies per search
+- LinkedIn scraper is a placeholder (returns empty, ready to plug in)
+- Follow-up reminders are shown in UI only — no email/push notifications
+- No duplicate detection when saving leads

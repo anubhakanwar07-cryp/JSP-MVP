@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { CandidateForm, CompanyStage, RemotePreference } from '@/types'
+import type { CandidateForm, CompanyStage, RemotePreference, Tone } from '@/types'
 
 const STAGE_OPTIONS: { value: CompanyStage; label: string }[] = [
   { value: 'any',        label: 'Any Stage' },
@@ -16,6 +16,12 @@ const REMOTE_OPTIONS: { value: RemotePreference; label: string }[] = [
   { value: 'remote', label: 'Remote' },
   { value: 'hybrid', label: 'Hybrid' },
   { value: 'onsite', label: 'On-site' },
+]
+
+const TONE_OPTIONS: { value: Tone; label: string; desc: string }[] = [
+  { value: 'professional', label: 'Professional', desc: 'Formal, concise, data-driven' },
+  { value: 'warm',         label: 'Warm',         desc: 'Friendly and conversational' },
+  { value: 'confident',    label: 'Confident',    desc: 'Direct, lead with what you bring' },
 ]
 
 interface InputFormProps {
@@ -44,15 +50,20 @@ function SelectWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export default function InputForm({ onSubmit, loading }: InputFormProps) {
-  const [yourName, setYourName]               = useState('')
-  const [background, setBackground]           = useState('')
-  const [targetRole, setTargetRole]           = useState('')
-  const [achievements, setAchievements]       = useState('')
-  const [industry, setIndustry]               = useState('')
-  const [location, setLocation]               = useState('India')
-  const [companyStage, setCompanyStage]       = useState<CompanyStage>('any')
-  const [remotePreference, setRemotePreference] = useState<RemotePreference>('any')
-  const [preferredCompanies, setPreferredCompanies] = useState('')
+  const [yourName,            setYourName]            = useState('')
+  const [background,          setBackground]          = useState('')
+  const [targetRole,          setTargetRole]          = useState('')
+  const [achievements,        setAchievements]        = useState('')
+  const [tone,                setTone]                = useState<Tone>('professional')
+  const [targetCompany,       setTargetCompany]       = useState('')
+  const [industry,            setIndustry]            = useState('')
+  const [location,            setLocation]            = useState('India')
+  const [companyStage,        setCompanyStage]        = useState<CompanyStage>('any')
+  const [remotePreference,    setRemotePreference]    = useState<RemotePreference>('any')
+  const [preferredCompanies,  setPreferredCompanies]  = useState('')
+  const [companyDomain,       setCompanyDomain]       = useState('')
+  const [jobLink,             setJobLink]             = useState('')
+  const [jobDescription,      setJobDescription]      = useState('')
 
   const isReady = yourName.trim() && background.trim() && targetRole.trim()
 
@@ -60,22 +71,27 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
     e.preventDefault()
     if (!isReady) return
     onSubmit({
-      yourName: yourName.trim(),
-      background: background.trim(),
-      targetRole: targetRole.trim(),
-      achievements: achievements.trim(),
-      industry: industry.trim(),
-      location: location.trim(),
+      yourName:           yourName.trim(),
+      background:         background.trim(),
+      targetRole:         targetRole.trim(),
+      targetCompany:      targetCompany.trim(),
+      achievements:       achievements.trim(),
+      tone,
+      industry:           industry.trim(),
+      location:           location.trim(),
       companyStage,
       remotePreference,
       preferredCompanies: preferredCompanies.trim(),
+      companyDomain:      companyDomain.trim(),
+      jobLink:            jobLink.trim(),
+      jobDescription:     jobDescription.trim(),
     })
   }
 
   return (
     <form onSubmit={handleSubmit}>
 
-      {/* Section 1: Candidate Context */}
+      {/* Section 1: About You */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 mb-3">
         <div className="text-[11px] font-semibold tracking-[0.1em] uppercase pb-2.5 border-b border-[#2a2a2a] mb-4 text-green-400">
           About You
@@ -132,7 +148,7 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
           />
         </div>
 
-        <div>
+        <div className="mb-4">
           <label htmlFor="achievements" className={labelCls}>
             Key Achievements <Optional />
           </label>
@@ -147,15 +163,53 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
           />
           <p className="text-[11px] text-[#555] mt-1.5">Quantified wins get referenced directly in your outreach draft.</p>
         </div>
+
+        <div>
+          <label className={labelCls}>Email Tone</label>
+          <div className="flex gap-2">
+            {TONE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                disabled={loading}
+                onClick={() => setTone(opt.value)}
+                className={`flex-1 text-[12px] px-3 py-2 rounded-md border cursor-pointer font-[inherit] transition-colors text-left ${
+                  tone === opt.value
+                    ? 'bg-green-900 text-green-400 border-green-800'
+                    : 'bg-[#0f0f0f] text-[#666] border-[#2a2a2a] hover:text-[#aaa] hover:border-[#3a3a3a]'
+                }`}
+              >
+                <div className="font-semibold">{opt.label}</div>
+                <div className={`text-[10px] mt-0.5 ${tone === opt.value ? 'text-green-500' : 'text-[#444]'}`}>{opt.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Section 2: Target Segmentation */}
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 mb-4">
+      {/* Section 2: Who to Target */}
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 mb-3">
         <div className="text-[11px] font-semibold tracking-[0.1em] uppercase pb-2.5 border-b border-[#2a2a2a] mb-4 text-blue-400">
           Who to Target
           <span className="ml-2.5 text-[11px] font-normal text-[#555] normal-case tracking-normal">
             — used to discover and filter recruiter leads
           </span>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="targetCompany" className={labelCls}>
+            Target Company <Optional />
+          </label>
+          <input
+            id="targetCompany"
+            type="text"
+            value={targetCompany}
+            onChange={(e) => setTargetCompany(e.target.value)}
+            placeholder="e.g. Razorpay, Stripe, Linear"
+            disabled={loading}
+            className={inputCls}
+          />
+          <p className="text-[11px] text-[#555] mt-1.5">Single company focus. Use Preferred Companies below for multiple.</p>
         </div>
 
         <div className="mb-4">
@@ -222,9 +276,6 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-[#555] mt-1.5">
-            {location === 'Remote' ? 'Showing remote-first companies only.' : 'Defaults to India. Clear to search globally.'}
-          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3.5 mb-4">
@@ -263,7 +314,7 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
           </div>
         </div>
 
-        <div>
+        <div className="mb-4">
           <label htmlFor="preferredCompanies" className={labelCls}>
             Preferred Companies <Optional />
           </label>
@@ -276,7 +327,63 @@ export default function InputForm({ onSubmit, loading }: InputFormProps) {
             disabled={loading}
             className={inputCls}
           />
-          <p className="text-[11px] text-[#555] mt-1.5">Leave blank to discover recruiter leads based on industry and stage filters.</p>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="companyDomain" className={labelCls}>
+            Company Domain <Optional />
+          </label>
+          <input
+            id="companyDomain"
+            type="text"
+            value={companyDomain}
+            onChange={(e) => setCompanyDomain(e.target.value)}
+            placeholder="e.g. stripe.com"
+            disabled={loading}
+            className={inputCls}
+          />
+          <p className="text-[11px] text-[#555] mt-1.5">Used to improve recruiter email discovery via Hunter.io.</p>
+        </div>
+      </div>
+
+      {/* Section 3: Job Details */}
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 mb-4">
+        <div className="text-[11px] font-semibold tracking-[0.1em] uppercase pb-2.5 border-b border-[#2a2a2a] mb-4 text-[#888]">
+          Job Details
+          <span className="ml-2.5 text-[11px] font-normal text-[#555] normal-case tracking-normal">
+            — optional, improves email personalization
+          </span>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="jobLink" className={labelCls}>
+            Job Posting Link <Optional />
+          </label>
+          <input
+            id="jobLink"
+            type="url"
+            value={jobLink}
+            onChange={(e) => setJobLink(e.target.value)}
+            placeholder="https://..."
+            disabled={loading}
+            className={inputCls}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="jobDescription" className={labelCls}>
+            Job Description <Optional />
+          </label>
+          <textarea
+            id="jobDescription"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the job description or key requirements here…"
+            disabled={loading}
+            rows={4}
+            className={`${inputCls} resize-y min-h-[96px] leading-relaxed`}
+          />
+          <p className="text-[11px] text-[#555] mt-1.5">The AI will tie specific requirements to your background.</p>
         </div>
       </div>
 

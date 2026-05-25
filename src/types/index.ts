@@ -1,13 +1,25 @@
+export type RecruiterSource = 'hunter' | 'linkedin_scraper' | 'fallback' | 'manual'
+export type EmailStatus = 'verified' | 'probable' | 'unknown' | 'fallback'
+export type FollowupStage = 'first_followup' | 'second_followup' | 'going_cold'
+export type OutreachStatus = 'draft' | 'sent' | 'followup_due' | 'followed_up' | 'replied' | 'cold' | 'closed'
+export type Tone = 'professional' | 'warm' | 'confident'
+export type CompanyStage = 'any' | 'seed-a' | 'b-c' | 'late' | 'enterprise'
+export type RemotePreference = 'any' | 'remote' | 'hybrid' | 'onsite'
+
 export interface Recruiter {
   name: string
   role: string
   email: string
+  emailStatus: EmailStatus
   emailVerified: boolean
   linkedin: string | null
+  profileUrl: string | null
   website: string | null
   company: string
+  domain: string | null
   confidence: number
   location: string
+  source: RecruiterSource
 }
 
 export interface OutreachDraft {
@@ -20,22 +32,31 @@ export interface QueueItem {
   outreach: OutreachDraft
   saving: boolean
   saved: boolean
+  followupDate: string | null
+  followupStage: FollowupStage | null
 }
-
-export type CompanyStage = 'any' | 'seed-a' | 'b-c' | 'late' | 'enterprise'
-export type RemotePreference = 'any' | 'remote' | 'hybrid' | 'onsite'
-export type OutreachStatus = 'draft' | 'sent'
 
 export interface CandidateForm {
   yourName: string
   background: string
   targetRole: string
+  targetCompany: string
   achievements: string
   industry: string
   location: string
   companyStage: CompanyStage
   remotePreference: RemotePreference
   preferredCompanies: string
+  companyDomain: string
+  jobLink: string
+  jobDescription: string
+  tone: Tone
+}
+
+export interface CandidateContext {
+  yourName: string
+  background: string
+  targetRole: string
 }
 
 export interface SaveLeadPayload {
@@ -48,4 +69,14 @@ export interface SaveLeadPayload {
   outreach_status?: OutreachStatus
   source?: string
   confidence_score?: number
+  email_status?: EmailStatus
+  recruiter_linkedin?: string
+  candidate_name?: string
+}
+
+export interface SaveLeadResponse {
+  success: boolean
+  id: string | null
+  followup_date: string | null
+  followup_stage: FollowupStage | null
 }

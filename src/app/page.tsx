@@ -4,7 +4,10 @@ import { useState } from 'react'
 import InputForm from '@/components/InputForm'
 import RecruiterList from '@/components/RecruiterList'
 import OutreachQueue from '@/components/OutreachQueue'
-import type { CandidateForm, Recruiter, QueueItem, OutreachStatus, OutreachDraft } from '@/types'
+import type {
+  CandidateForm, CandidateContext, Recruiter, QueueItem,
+  OutreachStatus, OutreachDraft, SaveLeadResponse,
+} from '@/types'
 
 const STEP_LABELS: Record<number, string> = {
   1: 'Your Context',
@@ -13,17 +16,24 @@ const STEP_LABELS: Record<number, string> = {
 }
 
 export default function HomePage() {
-  const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState<CandidateForm>({
-    yourName: '', background: '', targetRole: '', achievements: '',
-    industry: '', location: 'India', companyStage: 'any',
-    remotePreference: 'any', preferredCompanies: '',
+  const [step,                setStep]                = useState(1)
+  const [formData,            setFormData]            = useState<CandidateForm>({
+    yourName: '', background: '', targetRole: '', targetCompany: '',
+    achievements: '', industry: '', location: 'India',
+    companyStage: 'any', remotePreference: 'any', preferredCompanies: '',
+    companyDomain: '', jobLink: '', jobDescription: '', tone: 'professional',
   })
-  const [recruiters, setRecruiters] = useState<Recruiter[]>([])
-  const [queue, setQueue] = useState<QueueItem[]>([])
-  const [loadingRecruiters, setLoadingRecruiters] = useState(false)
-  const [generatingOutreach, setGeneratingOutreach] = useState(false)
-  const [error, setError] = useState('')
+  const [recruiters,          setRecruiters]          = useState<Recruiter[]>([])
+  const [queue,               setQueue]               = useState<QueueItem[]>([])
+  const [loadingRecruiters,   setLoadingRecruiters]   = useState(false)
+  const [generatingOutreach,  setGeneratingOutreach]  = useState(false)
+  const [error,               setError]               = useState('')
+
+  const candidateContext: CandidateContext = {
+    yourName:   formData.yourName,
+    background: formData.background,
+    targetRole: formData.targetRole,
+  }
 
   async function handleFormSubmit(data: CandidateForm) {
     setError('')
@@ -35,12 +45,14 @@ export default function HomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          targetRole: data.targetRole,
-          industry: data.industry,
-          location: data.location,
-          companyStage: data.companyStage,
-          remotePreference: data.remotePreference,
+          targetRole:         data.targetRole,
+          targetCompany:      data.targetCompany,
+          industry:           data.industry,
+          location:           data.location,
+          companyStage:       data.companyStage,
+          remotePreference:   data.remotePreference,
           preferredCompanies: data.preferredCompanies,
+          companyDomain:      data.companyDomain,
         }),
       })
       const result = await res.json()
@@ -54,6 +66,10 @@ export default function HomePage() {
     }
   }
 
+  function handleAddManualRecruiter(recruiter: Recruiter) {
+    setRecruiters((prev) => [...prev, recruiter])
+  }
+
   async function handleGenerateForSelected(selectedRecruiters: Recruiter[]) {
     setError('')
     setGeneratingOutreach(true)
@@ -65,23 +81,25 @@ export default function HomePage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              yourName: formData.yourName,
-              background: formData.background,
-              targetRole: formData.targetRole,
-              achievements: formData.achievements,
-              industry: formData.industry,
-              location: formData.location,
-              companyStage: formData.companyStage,
+              yourName:        formData.yourName,
+              background:      formData.background,
+              targetRole:      formData.targetRole,
+              achievements:    formData.achievements,
+              industry:        formData.industry,
+              location:        formData.location,
+              companyStage:    formData.companyStage,
               remotePreference: formData.remotePreference,
-              company: recruiter.company,
-              recruiterName: recruiter.name,
-              recruiterRole: recruiter.role,
+              tone:            formData.tone,
+              jobDescription:  formData.jobDescription,
+              company:         recruiter.company,
+              recruiterName:   recruiter.name,
+              recruiterRole:   recruiter.role,
               recruiterLocation: recruiter.location,
             }),
           })
           const outreach = await res.json() as OutreachDraft
           if (!res.ok) throw new Error((outreach as { error?: string }).error || `Failed for ${recruiter.name}`)
-          return { recruiter, outreach, saving: false, saved: false }
+          return { recruiter, outreach, saving: false, saved: false, followupDate: null, followupStage: null }
         })
       )
       setQueue(drafts)
@@ -106,22 +124,29 @@ export default function HomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          company_name: item.recruiter.company,
-          role_targeted: formData.targetRole,
-          recruiter_name: item.recruiter.name,
-          recruiter_role: item.recruiter.role,
-          recruiter_email: item.recruiter.email,
-          outreach_message: `Subject: ${item.outreach.subject}\n\n${item.outreach.body}`,
-          outreach_status: status,
-          source: 'hunter',
-          confidence_score: item.recruiter.confidence,
+          company_name:       item.recruiter.company,
+          role_targeted:      formData.targetRole,
+          candidate_name:     formData.yourName,
+          recruiter_name:     item.recruiter.name,
+          recruiter_role:     item.recruiter.role,
+          recruiter_email:    item.recruiter.email,
+          recruiter_linkedin: item.recruiter.linkedin ?? undefined,
+          outreach_message:   `Subject: ${item.outreach.subject}\n\n${item.outreach.body}`,
+          outreach_status:    status,
+          source:             item.recruiter.source,
+          confidence_score:   item.recruiter.confidence,
+          email_status:       item.recruiter.emailStatus,
         }),
       })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error || 'Failed to save')
+      const result = await res.json() as SaveLeadResponse
+      if (!res.ok) throw new Error((result as { error?: string }).error || 'Failed to save')
 
       setQueue((prev) =>
-        prev.map((i) => i.recruiter.email === recruiterEmail ? { ...i, saving: false, saved: true } : i)
+        prev.map((i) =>
+          i.recruiter.email === recruiterEmail
+            ? { ...i, saving: false, saved: true, followupDate: result.followup_date, followupStage: result.followup_stage }
+            : i
+        )
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save lead.')
@@ -197,10 +222,17 @@ export default function HomePage() {
             recruiters={recruiters}
             onGenerateForSelected={handleGenerateForSelected}
             generating={generatingOutreach}
+            onAddManual={handleAddManualRecruiter}
           />
         )}
 
-        {step === 3 && <OutreachQueue queue={queue} onSave={handleSaveLead} />}
+        {step === 3 && (
+          <OutreachQueue
+            queue={queue}
+            candidate={candidateContext}
+            onSave={handleSaveLead}
+          />
+        )}
       </div>
     </main>
   )
