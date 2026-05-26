@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
     email_status,
     recruiter_linkedin,
     candidate_name,
+    your_name,
+    lead_type,
   } = body
 
   if (!company_name || !role_targeted) {
@@ -58,7 +60,10 @@ export async function POST(request: NextRequest) {
         confidence_score:   confidence_score   ?? null,
         sent_at:            outreach_status === 'sent' ? now.toISOString() : null,
         followup_date:      followup?.followupDate.toISOString() ?? null,
+        followup_due_at:    followup?.followupDate.toISOString() ?? null,
         followup_stage:     followup?.followupStage ?? null,
+        your_name:          your_name ?? null,
+        lead_type:          lead_type ?? 'outreach',
       }])
       .select('id')
       .single()

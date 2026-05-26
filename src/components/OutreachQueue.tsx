@@ -52,15 +52,17 @@ function DraftCard({
 }: {
   item: QueueItem
   candidate: CandidateContext
-  onSave: (email: string, status: OutreachStatus) => void
+  onSave: (email: string, status: OutreachStatus, editedBody: string) => void
 }) {
+  const { recruiter, outreach, saving, saved, followupDate, followupStage } = item
+
   const [copied,             setCopied]             = useState(false)
+  const [editedBody,         setEditedBody]         = useState(outreach.body)
   const [followupDraft,      setFollowupDraft]      = useState<OutreachDraft | null>(null)
   const [generatingFollowup, setGeneratingFollowup] = useState(false)
   const [showFollowup,       setShowFollowup]       = useState(false)
 
-  const { recruiter, outreach, saving, saved, followupDate, followupStage } = item
-  const fullText = `Subject: ${outreach.subject}\n\n${outreach.body}`
+  const fullText = `Subject: ${outreach.subject}\n\n${editedBody}`
 
   async function handleCopy() {
     try { await navigator.clipboard.writeText(fullText) } catch { /* omit */ }
@@ -140,9 +142,12 @@ function DraftCard({
       {/* Body */}
       <div className="mb-4">
         <p className="text-[10px] font-semibold text-[#555] tracking-[0.08em] uppercase mb-1">Body</p>
-        <pre className="text-xs leading-7 text-[#d4d4d4] bg-[#0f0f0f] px-3.5 py-3.5 rounded-md border border-[#2a2a2a] whitespace-pre-wrap break-words font-[inherit] m-0">
-          {outreach.body}
-        </pre>
+        <textarea
+          value={editedBody}
+          onChange={(e) => setEditedBody(e.target.value)}
+          rows={12}
+          className="w-full text-xs leading-7 text-[#d4d4d4] bg-[#0f0f0f] px-3.5 py-3.5 rounded-md border border-[#2a2a2a] whitespace-pre-wrap font-[inherit] resize-y focus:border-green-400 focus:outline-none transition-colors"
+        />
       </div>
 
       {/* Actions */}
@@ -155,7 +160,7 @@ function DraftCard({
         </button>
 
         <a
-          href={`https://mail.google.com/mail/?authuser=${encodeURIComponent(process.env.NEXT_PUBLIC_SENDER_EMAIL ?? '')}&view=cm&to=${encodeURIComponent(recruiter.email)}&su=${encodeURIComponent(outreach.subject)}&body=${encodeURIComponent(outreach.body)}`}
+          href={`https://mail.google.com/mail/?authuser=${encodeURIComponent(process.env.NEXT_PUBLIC_SENDER_EMAIL ?? '')}&view=cm&to=${encodeURIComponent(recruiter.email)}&su=${encodeURIComponent(outreach.subject)}&body=${encodeURIComponent(editedBody)}`}
           target="_blank"
           rel="noopener noreferrer"
           className={`${btnBase} bg-[#2a2a2a] text-[#e5e5e5] hover:bg-[#333] hover:border-[#3a3a3a] no-underline inline-flex items-center`}
@@ -164,7 +169,7 @@ function DraftCard({
         </a>
 
         <button
-          onClick={() => onSave(recruiter.email, 'sent')}
+          onClick={() => onSave(recruiter.email, 'sent', editedBody)}
           disabled={saving || saved}
           className={`${btnBase} ${
             saved
@@ -178,7 +183,7 @@ function DraftCard({
         </button>
 
         <button
-          onClick={() => onSave(recruiter.email, 'draft')}
+          onClick={() => onSave(recruiter.email, 'draft', editedBody)}
           disabled={saving || saved}
           className={`${btnBase} bg-transparent ${saving || saved ? 'text-[#444] cursor-not-allowed' : 'text-[#888] hover:text-[#e5e5e5] hover:border-[#3a3a3a]'}`}
         >
@@ -224,7 +229,7 @@ function DraftCard({
 interface OutreachQueueProps {
   queue: QueueItem[]
   candidate: CandidateContext
-  onSave: (recruiterEmail: string, status: OutreachStatus) => void
+  onSave: (recruiterEmail: string, status: OutreachStatus, editedBody: string) => void
 }
 
 export default function OutreachQueue({ queue, candidate, onSave }: OutreachQueueProps) {

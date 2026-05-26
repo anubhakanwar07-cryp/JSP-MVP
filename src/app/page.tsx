@@ -111,7 +111,7 @@ export default function HomePage() {
     }
   }
 
-  async function handleSaveLead(recruiterEmail: string, status: OutreachStatus) {
+  async function handleSaveLead(recruiterEmail: string, status: OutreachStatus, editedBody: string) {
     const item = queue.find((i) => i.recruiter.email === recruiterEmail)
     if (!item) return
 
@@ -131,11 +131,13 @@ export default function HomePage() {
           recruiter_role:     item.recruiter.role,
           recruiter_email:    item.recruiter.email,
           recruiter_linkedin: item.recruiter.linkedin ?? undefined,
-          outreach_message:   `Subject: ${item.outreach.subject}\n\n${item.outreach.body}`,
+          outreach_message:   `Subject: ${item.outreach.subject}\n\n${editedBody}`,
           outreach_status:    status,
           source:             item.recruiter.source,
           confidence_score:   item.recruiter.confidence,
           email_status:       item.recruiter.emailStatus,
+          your_name:          formData.yourName,
+          lead_type:          'outreach',
         }),
       })
       const result = await res.json() as SaveLeadResponse
@@ -223,6 +225,7 @@ export default function HomePage() {
             onGenerateForSelected={handleGenerateForSelected}
             generating={generatingOutreach}
             onAddManual={handleAddManualRecruiter}
+            onBack={handleBack}
           />
         )}
 

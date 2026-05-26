@@ -16,9 +16,12 @@ CREATE TABLE IF NOT EXISTS outreach_leads (
   outreach_status     text    DEFAULT 'draft',
   email_status        text    DEFAULT 'unknown',
   followup_date       timestamp with time zone,
+  followup_due_at     timestamp with time zone,
   followup_stage      text,
   last_followup_at    timestamp with time zone,
   sent_at             timestamp with time zone,
+  your_name           text,
+  lead_type           text    DEFAULT 'outreach',
   source              text    DEFAULT 'fallback',
   confidence_score    integer,
   created_at          timestamp with time zone DEFAULT timezone('utc'::text, now())
@@ -41,3 +44,8 @@ CREATE INDEX IF NOT EXISTS outreach_leads_followup_date_idx  ON outreach_leads (
 -- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS sent_at            timestamp with time zone;
 -- ALTER TABLE outreach_leads ALTER COLUMN followup_date TYPE timestamp with time zone USING followup_date::timestamp with time zone;
 -- CREATE INDEX IF NOT EXISTS outreach_leads_followup_date_idx ON outreach_leads (followup_date);
+--
+-- Branch 1 additions:
+-- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS followup_due_at timestamp with time zone;
+-- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS your_name       text;
+-- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS lead_type       text DEFAULT 'outreach';

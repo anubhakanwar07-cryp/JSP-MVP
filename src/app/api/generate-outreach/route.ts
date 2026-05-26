@@ -126,10 +126,19 @@ export async function POST(request: NextRequest) {
   if (process.env.OPENAI_API_KEY) {
     try {
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: generatePersonalizedOutreach(body) }],
-        temperature: 0.8,
-        max_tokens: 500,
+        model: 'gpt-4o',
+        max_tokens: 600,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a world-class career coach who writes cold outreach emails. Always respond with valid JSON only: { "subject": "...", "body": "..." }',
+          },
+          {
+            role: 'user',
+            content: generatePersonalizedOutreach(body),
+          },
+        ],
       })
       const raw    = completion.choices[0]?.message?.content?.trim() ?? ''
       const parsed = JSON.parse(raw) as { subject: string; body: string }

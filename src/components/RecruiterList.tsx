@@ -244,9 +244,10 @@ interface RecruiterListProps {
   onGenerateForSelected: (selected: Recruiter[]) => void
   generating: boolean
   onAddManual: (recruiter: Recruiter) => void
+  onBack: () => void
 }
 
-export default function RecruiterList({ recruiters, onGenerateForSelected, generating, onAddManual }: RecruiterListProps) {
+export default function RecruiterList({ recruiters, onGenerateForSelected, generating, onAddManual, onBack }: RecruiterListProps) {
   const [selected,        setSelected]        = useState<Recruiter[]>([])
   const [showManualForm,  setShowManualForm]   = useState(false)
 
@@ -269,6 +270,21 @@ export default function RecruiterList({ recruiters, onGenerateForSelected, gener
   const selectedCount  = selected.length
   const hunterCount    = recruiters.filter((r) => r.source === 'hunter').length
   const fallbackCount  = recruiters.filter((r) => r.source === 'fallback').length
+
+  if (recruiters.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[#888] text-sm mb-1">No recruiter leads found for these filters.</p>
+        <p className="text-[#555] text-xs mb-4">Try broadening your industry, location, or company stage.</p>
+        <button
+          onClick={onBack}
+          className="text-xs text-[#888] bg-transparent border border-[#2a2a2a] rounded-md px-3 py-1.5 cursor-pointer font-[inherit] hover:text-[#e5e5e5] transition-colors"
+        >
+          ← Adjust filters
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -312,6 +328,10 @@ export default function RecruiterList({ recruiters, onGenerateForSelected, gener
           + Add Recruiter Manually
         </button>
       )}
+
+      <p className="text-[10px] text-[#444] mb-4">
+        · Contacts sourced via Hunter.io · Unverified contacts are pattern-matched and should be confirmed before sending
+      </p>
 
       <button
         onClick={() => onGenerateForSelected(selected)}

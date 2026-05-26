@@ -72,6 +72,8 @@ export interface SaveLeadPayload {
   email_status?: EmailStatus
   recruiter_linkedin?: string
   candidate_name?: string
+  your_name?: string
+  lead_type?: string
 }
 
 export interface SaveLeadResponse {
