@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'JSP - Job Search Platform',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-[#0f0f0f] text-[#e5e5e5] min-h-screen antialiased">
+        <Nav />
         {children}
       </body>
     </html>

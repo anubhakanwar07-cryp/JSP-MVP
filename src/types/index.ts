@@ -76,6 +76,45 @@ export interface SaveLeadPayload {
   lead_type?: string
 }
 
+// Full lead record returned from DB
+export interface Lead {
+  id: string
+  company_name: string
+  role_targeted: string
+  candidate_name: string | null
+  recruiter_name: string | null
+  recruiter_role: string | null
+  recruiter_email: string | null
+  recruiter_linkedin: string | null
+  outreach_message: string | null
+  outreach_status: OutreachStatus
+  email_status: EmailStatus
+  followup_date: string | null
+  followup_due_at: string | null
+  followup_stage: FollowupStage | null
+  last_followup_at: string | null
+  sent_at: string | null
+  your_name: string | null
+  lead_type: string
+  source: string
+  confidence_score: number | null
+  notes: string | null
+  interview_date: string | null
+  created_at: string
+}
+
+export interface UpdateLeadPayload {
+  outreach_status?: OutreachStatus
+  notes?: string
+  interview_date?: string | null
+  followup_due_at?: string | null
+  followup_stage?: FollowupStage | null
+  last_followup_at?: string | null
+  sent_at?: string | null
+}
+
+export type FollowupState = 'pending' | 'reminded' | 'escalated' | 'cold' | 'cleared'
+
 export interface SaveLeadResponse {
   success: boolean
   id: string | null

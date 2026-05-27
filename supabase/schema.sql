@@ -49,3 +49,14 @@ CREATE INDEX IF NOT EXISTS outreach_leads_followup_date_idx  ON outreach_leads (
 -- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS followup_due_at timestamp with time zone;
 -- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS your_name       text;
 -- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS lead_type       text DEFAULT 'outreach';
+
+-- Branch 2 additions (run these in Supabase SQL Editor):
+-- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS notes          text;
+-- ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS interview_date date;
+--
+-- CREATE INDEX IF NOT EXISTS outreach_leads_followup_due_idx
+--   ON outreach_leads (followup_due_at)
+--   WHERE followup_due_at IS NOT NULL;
+--
+-- CREATE INDEX IF NOT EXISTS outreach_leads_status_created_idx
+--   ON outreach_leads (outreach_status, created_at DESC);
